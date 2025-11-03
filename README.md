@@ -11,7 +11,7 @@ The workflow is divided into 6 main stages:
 3.  **Feature Extraction:** Engineers a wide range of features (power, connectivity, phase) from the clean EEG data and creates classification labels from MEPs.
 4.  **Model Training:** Trains and evaluates machine learning models using Bayesian optimization (Optuna) and mRMR feature selection.
 5.  **Results Visualization:** Aggregates performance from all models and subjects to generate summary plots.
-6.  **Feature Importance:** (Script not provided, but is the logical next step) Analyzes which features were most predictive.
+6.  **Feature Importance:** Calculates permutation importance from trained models to analyze which features were predictive and whether these features differ across conditions.
 
 ---
 
@@ -104,6 +104,20 @@ Here is a description of each script in the order they should be run.
 * **Output:**
     * `roc_auc_performance.pdf` (Final summary plot)
     * A performance summary printed to the terminal.
+ 
+### 6. `feature_importance.py`
+
+* **Purpose:** To analyze *which* features were most predictive for the trained models and compare feature profiles across conditions.
+* **Input:**
+    * All `.pkl` result files from `results/models/`.
+* **Key Operations:**
+    * **Permutation Importance:** Loads the saved models from the `.pkl` files and runs `sklearn.inspection.permutation_importance` (using `roc_auc`) to calculate the importance of each feature.
+    * **Aggregation & Caching:** Averages importance scores across all subjects and saves them to `feature_importance_results.csv` to avoid re-computing.
+    * **Categorization:** Groups features by type (PSD, WPLI, PAC), brain region, and frequency band.
+    * **Statistical Analysis:** Performs Chi-squared tests and calculates Jaccard similarity to determine if the predictive feature profiles are statistically different between `Single`, `SICI`, and `SICF` conditions.
+* **Output:**
+    * `feature_importance_results.csv` (Cached importance scores)
+    * `eeg_feature_distinctiveness_analysis.pdf` / `.png` (A multi-panel plot showing regional/frequency preferences, overlap heatmaps, and top 10 features per condition).
 
 ---
 
@@ -143,6 +157,12 @@ The pipeline must be run sequentially.
     python performance_results.py
     ```
 
+6.  **Generate Feature Importance Plot:**
+    This script runs the final importance analysis. **Warning: This step is computationally expensive** as it runs permutation importance on all models.
+    ```bash
+    python feature_importance.py
+    ```
+    
 ##  Key Dependencies
 
 Make sure you have the following key libraries installed in your environment:
